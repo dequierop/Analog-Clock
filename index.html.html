@@ -37,6 +37,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .big{font-size:3rem;font-weight:700;letter-spacing:.04em;line-height:1.1}
 .say{font-size:1.15rem;color:var(--mut);min-height:1.7em}
 #fbar{display:none}
+.foot{text-align:center;color:var(--mut);font-size:.85rem;padding:0 20px 24px}
+body.full .foot{display:none}
 #fMin[aria-pressed=false]{text-decoration:line-through;opacity:.7}
 .fans{font-size:1.4rem;font-weight:700}
 .fans #fsay{font-weight:400;color:var(--mut);font-size:1.1rem}
@@ -88,6 +90,7 @@ body.full #fbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-
     </div>
   </section>
 </main>
+<footer class="foot" id="foot"></footer>
 <script>
 const T={
 th:{title:"อ่านเวลาจากนาฬิกาเข็ม",hint:"ลากเข็มสั้น (ชั่วโมง) หรือเข็มยาว (นาที) เพื่อทดลองได้",set:"ครูตั้งเวลา",h:"ชั่วโมง",m:"นาที",setb:"ตั้งเวลา",rand:"สุ่มโจทย์",lvl:"ระดับ",rb:"สุ่มเวลา",showmin:"แสดงตัวเลขนาที (5, 10, 15…)",show:"เฉลย",hide:"ซ่อนเฉลย",
@@ -123,7 +126,7 @@ function draw(){
 function setTime(nh,nm){h=((nh%12)+12)%12||12;if(h==12)h=12;m=Math.max(0,Math.min(59,nm|0));shown=false;draw()}
 function tr(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
  $("t_title").textContent=t.title;$("t_hint").textContent=t.hint;$("t_set").textContent=t.set;$("t_h").textContent=t.h;$("t_m").textContent=t.m;
- $("btnSet").textContent=t.setb;$("btnFull").textContent=F[lang][0];$("fExit").textContent=F[lang][1];$("fRand").textContent=t.rb;$("fMin").textContent=F[lang][2];$("t_rand").textContent=t.rand;$("t_lvl").textContent=t.lvl;$("btnRand").textContent=t.rb;$("t_showmin").textContent=t.showmin;
+ $("btnSet").textContent=t.setb;$("btnFull").textContent=F[lang][0];$("fExit").textContent=F[lang][1];$("fRand").textContent=t.rb;$("fMin").textContent=F[lang][2];$("foot").textContent={th:"พัฒนาโดย",en:"Developed by",zh:"开发者："}[lang]+" ครูภัทรกันย์ กิตติยศ";$("t_rand").textContent=t.rand;$("t_lvl").textContent=t.lvl;$("btnRand").textContent=t.rb;$("t_showmin").textContent=t.showmin;
  const v=$("lvl").value||"0";$("lvl").innerHTML=t.lv.map((x,i)=>`<option value="${i}">${x}</option>`).join("");$("lvl").value=v;
  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l==lang));draw()}
 document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem("clockLang",lang)}catch(e){}tr()});
