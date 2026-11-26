@@ -36,6 +36,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .ans{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px;text-align:center}
 .big{font-size:3rem;font-weight:700;letter-spacing:.04em;line-height:1.1}
 .say{font-size:1.15rem;color:var(--mut);min-height:1.7em}
+#fbar{display:none}
+#fMin[aria-pressed=false]{text-decoration:line-through;opacity:.7}
+.fans{font-size:1.4rem;font-weight:700}
+.fans #fsay{font-weight:400;color:var(--mut);font-size:1.1rem}
+body.full header,body.full #panel,body.full .hint{display:none}
+body.full main{grid-template-columns:1fr;max-width:none;padding:12px}
+body.full svg{height:calc(100vh - 120px);max-height:none}
+body.full #fbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;margin-top:8px}
 </style>
 </head>
 <body>
@@ -43,6 +51,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <h1><span id="t_title"></span> <small class="credit">by KRUPOY</small></h1>
   <div class="lang" role="group" aria-label="Language">
     <button data-l="th">ไทย</button><button data-l="en">EN</button><button data-l="zh">中文</button>
+  <button class="b alt" id="btnFull"></button>
   </div>
 </header>
 <main>
@@ -55,8 +64,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
       <circle cx="200" cy="200" r="11" fill="var(--hour)"/>
     </svg>
     <p class="hint" id="t_hint"></p>
+    <div id="fbar"><button class="b alt" id="fRand"></button><button class="b" id="fAns"></button><div class="fans"><span id="fdig"></span> <span id="fsay"></span></div><button class="b alt" id="fMin"></button><button class="b alt" id="fExit"></button></div>
   </section>
-  <section class="card">
+  <section class="card" id="panel">
     <h2 id="t_set"></h2>
     <div class="row">
       <label><span id="t_h"></span><input id="inH" type="number" min="1" max="12" value="3"></label>
@@ -91,6 +101,7 @@ lv:["整点","半点","每15分钟","每5分钟","任意分钟"],
 say:(h,m)=>m==0?`${h}点整`:m==30?`${h}点半`:`${h}点${m}分`}
 };
 let lang="th",h=3,m=0,shown=false;
+const F={th:["เต็มจอ","ออก","ตัวเลขนาที"],en:["Full screen","Exit","Minute numbers"],zh:["全屏","退出","分钟数字"]};
 try{lang=localStorage.getItem("clockLang")||"th"}catch(e){}
 if(!T[lang])lang="th";
 const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
@@ -107,11 +118,12 @@ function draw(){
  const hh=h==0?12:h;
  $("digital").textContent=shown?`${hh}:${String(m).padStart(2,"0")}`:"?";
  $("say").textContent=shown?T[lang].say(hh,m):"";
- $("btnAns").textContent=shown?T[lang].hide:T[lang].show}
+ $("btnAns").textContent=$("fAns").textContent=shown?T[lang].hide:T[lang].show;
+ $("fdig").textContent=$("digital").textContent;$("fsay").textContent=$("say").textContent}
 function setTime(nh,nm){h=((nh%12)+12)%12||12;if(h==12)h=12;m=Math.max(0,Math.min(59,nm|0));shown=false;draw()}
 function tr(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
  $("t_title").textContent=t.title;$("t_hint").textContent=t.hint;$("t_set").textContent=t.set;$("t_h").textContent=t.h;$("t_m").textContent=t.m;
- $("btnSet").textContent=t.setb;$("t_rand").textContent=t.rand;$("t_lvl").textContent=t.lvl;$("btnRand").textContent=t.rb;$("t_showmin").textContent=t.showmin;
+ $("btnSet").textContent=t.setb;$("btnFull").textContent=F[lang][0];$("fExit").textContent=F[lang][1];$("fRand").textContent=t.rb;$("fMin").textContent=F[lang][2];$("t_rand").textContent=t.rand;$("t_lvl").textContent=t.lvl;$("btnRand").textContent=t.rb;$("t_showmin").textContent=t.showmin;
  const v=$("lvl").value||"0";$("lvl").innerHTML=t.lv.map((x,i)=>`<option value="${i}">${x}</option>`).join("");$("lvl").value=v;
  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l==lang));draw()}
 document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem("clockLang",lang)}catch(e){}tr()});
@@ -119,7 +131,8 @@ $("btnSet").onclick=()=>setTime(parseInt($("inH").value)||12,parseInt($("inM").v
 $("btnRand").onclick=()=>{const s=[60,30,15,5,1][+$("lvl").value],n=60/s;
  setTime(1+Math.floor(Math.random()*12),s==60?0:Math.floor(Math.random()*n)*s)};
 $("btnAns").onclick=()=>{shown=!shown;draw()};
-$("showMin").onchange=e=>$("mnums").style.display=e.target.checked?"":"none";
+function setMin(on){$("mnums").style.display=on?"":"none";$("showMin").checked=on;$("fMin").setAttribute("aria-pressed",on)}
+$("showMin").onchange=e=>setMin(e.target.checked);$("fMin").onclick=()=>setMin($("mnums").style.display=="none");setMin(true);
 // drag hands
 let drag=null;const svg=$("clock");
 function pt(e){const r=svg.getBoundingClientRect(),k=400/r.width;return{x:(e.clientX-r.left)*k-200,y:(e.clientY-r.top)*k-200}}
@@ -130,6 +143,11 @@ function move(e){const p=pt(e);let a=Math.atan2(p.x,-p.y)*180/Math.PI;if(a<0)a+=
  if(drag=="m"){const nm=Math.round(a/6)%60;if(m>45&&nm<15)h=h%12+1;else if(m<15&&nm>45)h=(h+10)%12+1;m=nm}
  else{h=Math.floor(a/30)||12;if(h==0)h=12}
  shown=false;draw()}
+function full(on){document.body.classList.toggle("full",on);try{if(on&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});else if(!on&&document.fullscreenElement)document.exitFullscreen()}catch(e){}}
+$("btnFull").onclick=()=>full(true);$("fExit").onclick=()=>full(false);
+$("fRand").onclick=()=>$("btnRand").click();$("fAns").onclick=()=>$("btnAns").click();
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement)document.body.classList.remove("full")});
+document.addEventListener("keydown",e=>{if(e.key=="Escape")full(false)});
 tr();draw();
 </script>
 </body>
